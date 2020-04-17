@@ -1,0 +1,12 @@
+.emoji-tooltip {
+    text-align: center;
+}
+.emoji-tooltip .emoji {
+    width: var(--bet-size);
+    height: var(--bet-size);
+    min-height: var(--bet-size);
+    margin-bottom: 3px;
+}
+.better-emoji-tooltips-slider .bubble-3we2di {
+    display: none;
+}
