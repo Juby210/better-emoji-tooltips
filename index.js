@@ -19,17 +19,29 @@ module.exports = class BetterEmojiTooltips extends Plugin {
             try {
                 if (this.props.text.startsWith &&
                     this.props.text.startsWith(':') &&
-                    this.props.text.endsWith(':') &&
-                    !this.props.children.toString().includes('onMouseLeave')) {
-                        const emoji = this.props.children()
-                        emoji.props.jumboable = true
+                    this.props.text.endsWith(':')) {
+                        let emoji = this.props.children(this), emoji2
+                        if (emoji.type.displayName == 'EmojiButton') {
+                            emoji2 = emoji.props.emoji
+                            const { type } = emoji
+                            emoji.type = e => {
+                                const { props: { children } } = type(e)
+                                children.props.className = 'emoji jumboable'
+                                return children
+                            }
+                        } else if (emoji.type.displayName == 'Clickable') {
+                            emoji = emoji.props.children[0]
+                            emoji.props.className = 'emoji jumboable'
+                            if (emoji.props.src.startsWith('https'))
+                                emoji.props.emojiId = emoji.props.src.split('/')[4].split('.')[0]
+                        } else emoji.props.jumboable = true
 
                         this.props.text = React.createElement('div', {
                             className: 'emoji-tooltip', style: { '--bet-size': _this.settings.get('size', 80) + 'px' }
                         }, emoji, React.createElement('br'), this.props.text)
 
                         if (!_this.settings.get('serverName', true)) return
-                        const emoji2 = getCustomEmojiById(emoji.props.emojiId)
+                        if (!emoji2) emoji2 = getCustomEmojiById(emoji.props.emojiId)
                         if (!emoji2) return
                         const server = getGuild(emoji2.guildId)
                         if (!server) return
