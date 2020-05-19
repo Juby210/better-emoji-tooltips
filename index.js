@@ -21,18 +21,10 @@ module.exports = class BetterEmojiTooltips extends Plugin {
                     this.props.text.startsWith(':') &&
                     this.props.text.endsWith(':')) {
                         let emoji = this.props.children(this), emoji2
-                        if (emoji.type.displayName == 'EmojiButton') {
-                            emoji2 = emoji.props.emoji
-                            const { type } = emoji
-                            emoji.type = e => {
-                                const { props: { children } } = type(e)
-                                children.props.className = 'emoji jumboable'
-                                return children
-                            }
-                        } else if (emoji.type.displayName == 'Clickable') {
-                            emoji = emoji.props.children[0]
+                        if (emoji.type.displayName == 'Clickable' || emoji.type == 'div') {
+                            emoji = emoji.props.children[0] || emoji.props.children
                             emoji.props.className = 'emoji jumboable'
-                            if (emoji.props.src.startsWith('https'))
+                            if (emoji.props.src.startsWith('https://cdn.discord') )
                                 emoji.props.emojiId = emoji.props.src.split('/')[4].split('.')[0]
                         } else emoji.props.jumboable = true
 
