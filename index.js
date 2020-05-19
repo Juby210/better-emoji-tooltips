@@ -10,39 +10,42 @@ module.exports = class BetterEmojiTooltips extends Plugin {
         this.registerSettings('better-emoji-tooltips', 'Better Emoji Tooltips', Settings)
         this.loadCSS(resolve(__dirname, 'style.css'))
 
-        const _this = this
         const { getCustomEmojiById } = await getModule(['getCustomEmojiById'])
         const { getGuild } = await getModule(['getGuild'])
         const Tooltip = await getModuleByDisplayName('Tooltip')
 
-        inject('better-emoji-tooltips', Tooltip.prototype, 'show', function () {
+        inject('better-emoji-tooltips', Tooltip.prototype, 'renderTooltip', (_, res) => {
+            if (!res.props.targetElementRef || !res.props.targetElementRef.current || !res.props.children.split)
+                return res
+            const s = res.props.children.split(' ').pop()
+            if (!s.startsWith(':') || !s.endsWith(':')) return res
+
             try {
-                if (this.props.text.startsWith &&
-                    this.props.text.startsWith(':') &&
-                    this.props.text.endsWith(':')) {
-                        let emoji = this.props.children(this), emoji2
-                        if (emoji.type.displayName == 'Clickable' || emoji.type == 'div') {
-                            emoji = emoji.props.children[0] || emoji.props.children
-                            emoji.props.className = 'emoji jumboable'
-                            if (emoji.props.src.startsWith('https://cdn.discord') )
-                                emoji.props.emojiId = emoji.props.src.split('/')[4].split('.')[0]
-                        } else emoji.props.jumboable = true
+                let src
+                const { current } = res.props.targetElementRef
+                const img = current.querySelector('img')
+                if (current.className.startsWith('emoji')) src = current.src
+                else if (img && (img.className.startsWith('emoji') || img.className.startsWith('icon-')))
+                src = img.src; else return res
 
-                        this.props.text = React.createElement('div', {
-                            className: 'emoji-tooltip', style: { '--bet-size': _this.settings.get('size', 80) + 'px' }
-                        }, emoji, React.createElement('br'), this.props.text)
+                res.props.children = React.createElement('div', {
+                    className: 'emoji-tooltip', style: { '--bet-size': this.settings.get('size', 80) + 'px' }
+                }, React.createElement('img', { className: 'emoji jumboable', src }),
+                React.createElement('br'), res.props.children)
 
-                        if (!_this.settings.get('serverName', true)) return
-                        if (!emoji2) emoji2 = getCustomEmojiById(emoji.props.emojiId)
-                        if (!emoji2) return
-                        const server = getGuild(emoji2.guildId)
-                        if (!server) return
+                if (!this.settings.get('serverName', true) || !src.startsWith('https://cdn.discord')) return res
+                const id = src.split('/')[4].split('.')[0]
+                const emoji = getCustomEmojiById(id)
+                if (!emoji) return res
+                const server = getGuild(emoji.guildId)
+                if (!server) return res
 
-                        this.props.text.props.children.push(React.createElement('br'), 'Server: ' + server.name)
-                }
+                res.props.children.props.children.push(React.createElement('br'), 'Server: ' + server.name)
             } catch (e) {
-                console.error(e)
+                console.error(e, res)
             }
+
+            return res
         })
     }
 
