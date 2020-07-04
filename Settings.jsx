@@ -16,6 +16,7 @@ module.exports = class Settings extends React.Component {
                 markers={[ 10, 25, 50, 75, 100, 125, 150 ]}
                 className='better-emoji-tooltips-slider'
                 onValueChange={ v => this.props.updateSetting('size', Math.round(v)) }
+                onValueRender={ v => <span>{Math.round(v)} px</span> }
             >Emoji size</SliderInput>
         </>
     }
